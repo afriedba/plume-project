@@ -7,23 +7,29 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import SpanSelector
 import argparse
 import copy
-import matplotlib.patches as patches 
+import matplotlib.patches as patches
+import os 
 
 #notes - review if self 
+
+def get_image_paths_from_folder(folder_path):
+    # Get all image file paths in the folder
+    image_paths = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp')):
+            image_paths.append(os.path.join(folder_path, filename))
+    return image_paths
 
 class Plume:
     def __init__(self, image_path: str = None, image_array: np.ndarray = None):
 
-
-        
-
         if image_path is not None:
-            image_paths = ['test-image-for-tripathi.jpeg']
+            # image_paths = ['test-image-for-tripathi.jpeg']
             image = Image.open(image_path)
 
             self.image_array = asarray(image)
-
             print(f"Successfully loaded image from {image_path} with shape: {self.image_array.shape}")
+
         elif image_array is not None:
             self.image_array = image_array  
             print(f"image array is {self.image_array}")
@@ -36,7 +42,6 @@ class Plume:
         print(f"image shape is {self.image_array.shape}")
         print(f"image height is {self.image_height}")
         print(f"image width is {self.image_width}")
-        #look up what self. in front of parameters means
 
         if self.image_height < 2 or self.image_width < 2:
             raise ValueError("Image provided must be at least 2x2 pixels")
@@ -118,7 +123,6 @@ class Plume:
         concentration = self.intensity_to_concentration(mean_intensity, calibration_factor)
         return concentration
     
-
     @staticmethod
     def analyze_image_series(image_paths, region, calibration_factor):
         concentrations = []
@@ -140,31 +144,44 @@ class Plume:
         plt.title('Dye Concentration Over Time')
         plt.show()
 
+
+
 if __name__ == "__main__":
-        print("Starting...")
-        image_paths = ['test-image-for-tripathi.jpeg']  # Replace with your image paths
-        print(f"Image paths: {image_paths}")
+    print("Starting...")
 
+    folder_path = "plume-project/images"  # Replace with the path to your image folder
+    image_paths = get_image_paths_from_folder(folder_path)
+
+    if not image_paths:
+        raise RuntimeError(f"No images found in folder {folder_path}")
        
-        try:
-            print(f"Creating plume instance...")
-            plume_instance = Plume(image_path=image_paths[0])
+    try:
 
-            print(f"Selecting ROI...")
-            region = plume_instance.select_roi(image_paths[0])  # Define the region of interest (x1, y1, x2, y2)
-            print (f"Final selected region: {region}")
+        selected_image_path = "plume-project/images/" + input(f"Enter the name of the image for ROI selection from {folder_path}: ")
+            
+        if not os.path.isfile(selected_image_path):
+            raise ValueError("The provided file path is not valid.")
 
-            calibration_factor = 35  # Define the calibration factor to convert intensity to concentration
-            print (f"Calibration factor: {calibration_factor}")
+        print("Creating plume instance...")
+        plume_instance = Plume(image_path=selected_image_path)
 
-            print (f"analyzing image series...")
-            concentrations = Plume.analyze_image_series(image_paths, region, calibration_factor)
-        #put plume in front of plot concentrations
-            print(f"Concentrations: {concentrations}")
+        print("Selecting ROI...")
+        region = plume_instance.select_roi(selected_image_path)  # Define the region of interest (x1, y1, x2, y2)
+        print (f"Final selected region: {region}")
 
-            print("Plotting concentrations...")
-            Plume.plot_concentrations(concentrations)
-            print("Program completed successfully.")
+        calibration_factor = 35  # Define the calibration factor to convert intensity to concentration
+        print (f"Calibration factor: {calibration_factor}")
 
-        except RuntimeError as e:
-            print(f"Error: {e}")
+        print ("analyzing image series...")
+        concentrations = Plume.analyze_image_series(image_paths, region, calibration_factor)
+    #put plume in front of plot concentrations
+        print(f"Concentrations: {concentrations}")
+
+        print("Plotting concentrations...")
+        Plume.plot_concentrations(concentrations)
+        print("Program completed successfully.")
+
+    except RuntimeError as e:
+        print(f"Error: {e}")
+
+# input a folder with images, go through entire thing with each one, graph them time vs. concentrations
