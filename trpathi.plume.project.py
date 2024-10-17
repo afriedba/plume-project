@@ -4,7 +4,7 @@ import numpy as np
 from numpy import asarray
 from PIL import Image
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector, SpanSelector
+from matplotlib.widgets import SpanSelector
 import argparse
 import copy
 import matplotlib.patches as patches 
